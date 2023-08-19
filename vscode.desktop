@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=VScode
+Exec=/home/cpothin/Documents/VSCode/bin/code
+Icon=/home/cpothin/Documents/VSCode/vscodeicon.png

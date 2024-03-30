@@ -20,35 +20,21 @@ public class SaveManager1 : MonoBehaviour
     {
         StartCoroutine(loadListeFurets());
     }
+    
+    [System.Serializable]
+    public class FuretListWrapper
+    {
+        public List<furet> furetList;
 
+        public FuretListWrapper(List<furet> list)
+        {
+            furetList = list;
+        }
+    }
     public IEnumerator saveListeFurets()
     {
-        bool internet = false;
-        if (Application.internetReachability == NetworkReachability.NotReachable)
-        {
-            internet = false;
-            manager.localSave = true;
-        }
-        else
-        {
-            internet = true;
-            manager.localSave = false;
-        }
-
         // on sauvegarde le bool contenant l'état de la connexion internet
-        BinaryFormatter binary = new BinaryFormatter();
         FileStream file;
-        using (file = new FileStream(Application.persistentDataPath + "/saveInternet.dat", FileMode.Create))
-        {
-            SaveInternet save = new SaveInternet();
-            // DATA HERE !
-            save.localSave = !internet;
-            binary.Serialize(file, save);
-            file.Close();
-        }
-
-
-
         BinaryFormatter binary2 = new BinaryFormatter();
         using (file = new FileStream(Application.persistentDataPath + "/savefurets.dat",FileMode.Create))
         {
@@ -57,22 +43,9 @@ public class SaveManager1 : MonoBehaviour
             save.furets = new List<furet>(manager.furets);
             binary2.Serialize(file, save);
             file.Close();
-        }
-        
-        if (!internet)
-        {
-            manager.popup.fading("<color=#00ee00>Sauvegarde locale terminée</color>");
-        }
-        else
-        {
-            
-            byte[] bytes = File.ReadAllBytes(Application.persistentDataPath + "/savefurets.dat");
-
-            var fileToSend = new UnityGoogleDrive.Data.File { Name = "savefurets.dat", Content = bytes };
-            GoogleDriveFiles.Update("1yLLjcK3P72ufTfhUKEQjAVBXSm2ciGUf", fileToSend).Send();
-            manager.popup.fading("<color=#00ee00>Sauvegarde internet terminée</color>");
-            
-            
+            FuretListWrapper wrapper = new FuretListWrapper(manager.furets);
+            string jsonData = JsonUtility.ToJson(wrapper);
+            File.WriteAllText(Application.persistentDataPath + "/furetData.json", jsonData);
         }
         yield return null;
     }
@@ -82,37 +55,8 @@ public class SaveManager1 : MonoBehaviour
     GoogleDriveFiles.DownloadRequest request;
     public IEnumerator loadListeFurets()
     {
-        // on charge le bool contenant l'état de la connexion internet lors de la sauvegarde
-        if (File.Exists(Application.persistentDataPath + "/saveInternet.dat"))
-        {
-            BinaryFormatter binary = new BinaryFormatter();
-            FileStream file = File.Open(Application.persistentDataPath + "/saveInternet.dat", FileMode.Open);
-            SaveInternet save = (SaveInternet)binary.Deserialize(file);
-            file.Close();
-            manager.localSave = save.localSave;
-        }
-
-        if (Application.internetReachability == NetworkReachability.NotReachable) // si pas de connexion internet, rien ne change puisqu'on ne peut que prendre la sauvegarde locale
-        {
-            // GameObject.Find("MainUI/Fond/TextLocal").GetComponent<TMPro.TMP_Text>().text = "Local, sans connexion";
-            load();
-        }
-        else // si on a une connexion internet, on doit vérifier l'état du bool 
-        {
-            if (manager.localSave) // si la sauvegarde était locale, on charge la sauvegarde locale
-            {
-                // GameObject.Find("MainUI/Fond/TextLocal").GetComponent<TMPro.TMP_Text>().text = "Local, avec connexion";
-                load();
-            }
-            else // sinon, on charge la sauvegarde d'internet
-            {
-                string local_url = Application.persistentDataPath + "/savefurets.dat";
-
-
-                request = GoogleDriveFiles.Download("1iqixmB5QBSyP93mbJV3zxRsKLGstGS9H");
-                request.Send().OnDone += loadStream;
-            }
-        }
+        load();
+        // loadJson();
         yield return null;
     }
 
@@ -141,6 +85,20 @@ public class SaveManager1 : MonoBehaviour
         manager.furets = new List<furet>(save.furets);
         manager.initListeFurets();
         Debug.Log("Game loaded locally!"+Application.persistentDataPath);
+    }
+    
+    public void loadJson()
+    {
+        string path = Application.persistentDataPath + "/furetData.json";
+        if (File.Exists(path))
+        {
+            string jsonData = File.ReadAllText(path);
+            FuretListWrapper wrapper = JsonUtility.FromJson<FuretListWrapper>(jsonData);
+            manager.furets = new List<furet>(wrapper.furetList);
+            manager.initListeFurets();
+        }
+        else
+            Debug.Log("Mince !");
     }
 
     public void deleteSave()

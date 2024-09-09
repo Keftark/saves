@@ -100,14 +100,14 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 alias gc="gcc -Wall -Wextra -Werror -fsanitize=address -g3"
+alias gcp="c++ -Wall -Wextra -Werror -fsanitize=address"
 alias normi="norminette -R CheckForbiddenSourcesHeader"
-alias valg='valg_func() { gcc -Wall -Wextra -Werror -g3 "$1"; valgrind ./a.out; }; valg_func'
-
-
-alias francinette=/nfs/homes/cpothin/francinette/tester.sh
-
-alias paco=/nfs/homes/cpothin/francinette/tester.sh
 alias grade='bash -c "$(curl https://grademe.fr)"'
-alias gpush="git add *;git commit -m 'auto command';git push"
-alias cdir='cdir_func () { mkdir "$1"; cd "$1"; vim "$1".c; }; cdir_func'
-alias vscode="cd /nfs/homes/cpothin/Documents/VSCode/bin && ./code" 
+alias gpush='gpush_func () { make fclean; git add *; git commit -m "$1"; git push origin HEAD; }; gpush_func'
+alias cdir='cdir_func () { mkdir "$1"; cd "$1"; touch "$1".c; }; cdir_func'
+
+alias francinette=/home/cpothin/francinette/tester.sh
+alias rider=/goinfre/cpothin/Downloads/JetBrains.Rider-2023.3.3/bin/rider.sh
+
+alias paco=/home/cpothin/francinette/tester.sh
+alias fulgrind='valgrind --leak-check=full --show-leak-kinds=all'
